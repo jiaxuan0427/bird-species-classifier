@@ -16,9 +16,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-CHECKPOINT_PATH = Path("outputs/efficientnet_b0_best.pth")
+PROJECT_DIR = Path(__file__).resolve().parent
+CHECKPOINT_PATH = PROJECT_DIR / "outputs" / "efficientnet_b0_best.pth"
 DEVICE = torch.device("cpu")
-
 
 # 2. CUSTOM WEBSITE DESIGN
 st.markdown("""
