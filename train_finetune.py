@@ -16,18 +16,20 @@ from tqdm import tqdm
 # ==================================================
 # 1. CONFIGURATION
 # ==================================================
-
 SEED = 42
 NUM_CLASSES = 200
 VALIDATION_RATIO = 0.20
 
 BATCH_SIZE = 8
-EPOCHS = 5
+EPOCHS = 8
 IMAGE_SIZE = 160
 
 # Smaller learning rates for fine-tuning.
 FEATURE_LR = 0.00001
 CLASSIFIER_LR = 0.0001
+
+WEIGHT_DECAY = 0.0001
+PATIENCE = 3
 
 DATA_DIR = Path("data")
 TRAIN_DIR = DATA_DIR / "Train"
@@ -36,8 +38,8 @@ ANNOTATION_FILE = DATA_DIR / "train.txt"
 OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-CHECKPOINT_PATH = OUTPUT_DIR / "resnet18_finetuned_best.pth"
-HISTORY_PATH = OUTPUT_DIR / "finetuning_history.csv"
+CHECKPOINT_PATH = OUTPUT_DIR / "resnet18_finetuned_augmented_best.pth"
+HISTORY_PATH = OUTPUT_DIR / "finetuning_augmented_history.csv"
 
 random.seed(SEED)
 torch.manual_seed(SEED)
@@ -84,8 +86,20 @@ print("Number of species:", len(species_by_label))
 # ==================================================
 # 3. IMAGE PREPROCESSING
 # ==================================================
+# Augmentation for training images
+train_transform = transforms.Compose([
+    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomRotation(degrees=10),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+])
 
-image_transform = transforms.Compose([
+# Normal preprocessing for validation images
+val_transform = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
     transforms.ToTensor(),
     transforms.Normalize(
@@ -100,8 +114,9 @@ image_transform = transforms.Compose([
 # ==================================================
 
 class BirdDataset(Dataset):
-    def __init__(self, records):
+    def __init__(self, records, transform):
         self.records = records
+        self.transform = transform
 
     def __len__(self):
         return len(self.records)
@@ -112,20 +127,20 @@ class BirdDataset(Dataset):
 
         with Image.open(image_path) as image:
             image = image.convert("RGB")
-            image = image_transform(image)
+            image = self.transform(image)
 
         return image, label
 
 
 train_loader = DataLoader(
-    BirdDataset(train_records),
+    BirdDataset(train_records, train_transform),
     batch_size=BATCH_SIZE,
     shuffle=True,
     num_workers=0
 )
 
 val_loader = DataLoader(
-    BirdDataset(val_records),
+    BirdDataset(val_records, val_transform),
     batch_size=BATCH_SIZE,
     shuffle=False,
     num_workers=0
@@ -181,7 +196,7 @@ optimizer = torch.optim.Adam([
         "params": model.fc.parameters(),
         "lr": CLASSIFIER_LR
     }
-])
+], weight_decay=WEIGHT_DECAY)
 
 print("Loaded baseline checkpoint.")
 print("Unfrozen layers: layer4 and fc")
@@ -190,8 +205,8 @@ print("Unfrozen layers: layer4 and fc")
 # ==================================================
 # 6. TRAIN AND VALIDATE
 # ==================================================
-
 best_val_accuracy = -1.0
+epochs_without_improvement = 0
 history = []
 
 for epoch in range(EPOCHS):
@@ -285,6 +300,7 @@ for epoch in range(EPOCHS):
     # Save the best model based on validation accuracy.
     if val_accuracy > best_val_accuracy:
         best_val_accuracy = val_accuracy
+        epochs_without_improvement = 0
 
         torch.save({
             "model_state_dict": model.state_dict(),
@@ -296,6 +312,18 @@ for epoch in range(EPOCHS):
         }, CHECKPOINT_PATH)
 
         print("Saved best fine-tuned model.")
+
+    else:
+        epochs_without_improvement += 1
+        print(
+            "No validation improvement:",
+            epochs_without_improvement,
+            "epoch(s)"
+        )
+
+    if epochs_without_improvement >= PATIENCE:
+        print("Early stopping: validation accuracy has stopped improving.")
+        break
 
 
 # ==================================================

@@ -1,4 +1,5 @@
 from pathlib import Path
+import csv
 
 import torch
 import torch.nn as nn
@@ -6,6 +7,10 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
 from tqdm import tqdm
+from sklearn.metrics import (
+    precision_recall_fscore_support,
+    confusion_matrix
+)
 
 # ============================================================
 # 1. SETTINGS
@@ -15,7 +20,9 @@ DATA_DIR = Path("data")
 TEST_DIR = DATA_DIR / "Test"
 TEST_ANNOTATION = DATA_DIR / "test.txt"
 
-CHECKPOINT_PATH = Path("outputs/custom_cnn_full.pth")
+OUTPUT_DIR = Path("outputs")
+CHECKPOINT_PATH = OUTPUT_DIR / "custom_cnn_full.pth"
+CONFUSION_MATRIX_PATH = OUTPUT_DIR / "custom_cnn_confusion_matrix.csv"
 
 IMAGE_SIZE = 128
 BATCH_SIZE = 16
@@ -45,7 +52,7 @@ test_transform = transforms.Compose([
 
 records = []
 
-with open(TEST_ANNOTATION, "r", encoding="utf-8") as file:
+with TEST_ANNOTATION.open("r", encoding="utf-8") as file:
     for line in file:
         filename, label = line.strip().split()
         records.append((filename, int(label)))
@@ -74,8 +81,9 @@ class BirdTestDataset(Dataset):
         filename, label = self.records[index]
         image_path = self.image_dir / filename
 
-        image = Image.open(image_path).convert("RGB")
-        image = self.transform(image)
+        with Image.open(image_path) as image:
+            image = image.convert("RGB")
+            image = self.transform(image)
 
         return image, label
 
@@ -96,7 +104,7 @@ test_loader = DataLoader(
 
 # ============================================================
 # 5. CUSTOM CNN ARCHITECTURE
-# Must match train_custom_cnn.py exactly
+# Must match the training architecture exactly
 # ============================================================
 
 class CustomCNN(nn.Module):
@@ -163,11 +171,12 @@ print(f"Loaded checkpoint: {CHECKPOINT_PATH}")
 
 
 # ============================================================
-# 7. CALCULATE TOP-1 AND AVERAGE PER-CLASS ACCURACY
+# 7. COLLECT PREDICTIONS
 # ============================================================
 
-correct_total = 0
-total_images = 0
+all_labels = []
+all_predictions = []
+all_top5_predictions = []
 
 class_correct = [0] * NUM_CLASSES
 class_total = [0] * NUM_CLASSES
@@ -178,23 +187,49 @@ with torch.no_grad():
         labels = labels.to(device)
 
         outputs = model(images)
+
+        # Highest-scoring class
         predictions = outputs.argmax(dim=1)
 
-        correct_total += (predictions == labels).sum().item()
-        total_images += labels.size(0)
+        # Five highest-scoring classes
+        top5_predictions = outputs.topk(5, dim=1).indices
 
-        for label, prediction in zip(labels, predictions):
-            label = label.item()
-            prediction = prediction.item()
+        all_labels.extend(labels.tolist())
+        all_predictions.extend(predictions.tolist())
+        all_top5_predictions.extend(top5_predictions.tolist())
 
+        for label, prediction in zip(
+            labels.tolist(), predictions.tolist()
+        ):
             class_total[label] += 1
 
             if prediction == label:
                 class_correct[label] += 1
 
 
-# Top-1 accuracy
+# ============================================================
+# 8. CALCULATE METRICS
+# ============================================================
+
+total_images = len(all_labels)
+
+correct_total = sum(
+    true_label == predicted_label
+    for true_label, predicted_label in zip(
+        all_labels, all_predictions
+    )
+)
+
 top1_accuracy = 100 * correct_total / total_images
+
+top5_correct = sum(
+    true_label in top5
+    for true_label, top5 in zip(
+        all_labels, all_top5_predictions
+    )
+)
+
+top5_accuracy = 100 * top5_correct / total_images
 
 # Average accuracy across classes represented in the test set
 class_accuracies = [
@@ -207,18 +242,62 @@ average_class_accuracy = (
     100 * sum(class_accuracies) / len(class_accuracies)
 )
 
+macro_precision, macro_recall, macro_f1, _ = (
+    precision_recall_fscore_support(
+        all_labels,
+        all_predictions,
+        labels=list(range(NUM_CLASSES)),
+        average="macro",
+        zero_division=0
+    )
+)
+
+# Convert macro metrics to percentages
+macro_precision *= 100
+macro_recall *= 100
+macro_f1 *= 100
+
 
 # ============================================================
-# 8. DISPLAY RESULTS
+# 9. SAVE CONFUSION MATRIX
+# Rows = true labels; columns = predicted labels
+# ============================================================
+
+confusion = confusion_matrix(
+    all_labels,
+    all_predictions,
+    labels=list(range(NUM_CLASSES))
+)
+
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+with CONFUSION_MATRIX_PATH.open(
+    "w", newline="", encoding="utf-8"
+) as file:
+    writer = csv.writer(file)
+
+    writer.writerow(["True/Predicted"] + list(range(NUM_CLASSES)))
+
+    for label, row in enumerate(confusion):
+        writer.writerow([label] + row.tolist())
+
+
+# ============================================================
+# 10. DISPLAY RESULTS
 # ============================================================
 
 print("\n" + "=" * 55)
-print("CUSTOM CNN TEST RESULTS")
+print("CUSTOM CNN OFFICIAL TEST RESULTS")
 print("=" * 55)
 
-print(f"Correct predictions: {correct_total}/{total_images}")
-print(f"Top-1 Accuracy: {top1_accuracy:.2f}%")
-print(f"Average Per-Class Accuracy: {average_class_accuracy:.2f}%")
+print(f"Correct Top-1 predictions: {correct_total}/{total_images}")
+print(f"Top-1 accuracy: {top1_accuracy:.4f}%")
+print(f"Top-5 accuracy: {top5_accuracy:.4f}%")
+print(f"Average accuracy per class: {average_class_accuracy:.4f}%")
+print(f"Macro precision: {macro_precision:.4f}%")
+print(f"Macro recall: {macro_recall:.4f}%")
+print(f"Macro F1-score: {macro_f1:.4f}%")
 print(f"Classes represented: {len(class_accuracies)}/{NUM_CLASSES}")
+print(f"Confusion matrix saved to: {CONFUSION_MATRIX_PATH}")
 
 print("\nEvaluation completed.")
