@@ -13,9 +13,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 
-# ==================================================
 # 1. CONFIGURATION
-# ==================================================
 SEED = 42
 NUM_CLASSES = 200
 VALIDATION_RATIO = 0.20
@@ -52,10 +50,7 @@ print("=" * 55)
 print("Device:", device)
 
 
-# ==================================================
 # 2. READ ANNOTATIONS AND CREATE SPLIT
-# ==================================================
-
 records = []
 
 with ANNOTATION_FILE.open("r", encoding="utf-8") as file:
@@ -83,9 +78,7 @@ print("Validation images:", len(val_records))
 print("Number of species:", len(species_by_label))
 
 
-# ==================================================
 # 3. IMAGE PREPROCESSING
-# ==================================================
 # Augmentation for training images
 train_transform = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
@@ -109,10 +102,7 @@ val_transform = transforms.Compose([
 ])
 
 
-# ==================================================
 # 4. DATASET AND DATALOADERS
-# ==================================================
-
 class BirdDataset(Dataset):
     def __init__(self, records, transform):
         self.records = records
@@ -147,10 +137,7 @@ val_loader = DataLoader(
 )
 
 
-# ==================================================
 # 5. LOAD THE BASELINE CHECKPOINT
-# ==================================================
-
 baseline_path = OUTPUT_DIR / "resnet18_best.pth"
 
 if not baseline_path.exists():
@@ -202,9 +189,7 @@ print("Loaded baseline checkpoint.")
 print("Unfrozen layers: layer4 and fc")
 
 
-# ==================================================
 # 6. TRAIN AND VALIDATE
-# ==================================================
 best_val_accuracy = -1.0
 epochs_without_improvement = 0
 history = []
@@ -326,10 +311,7 @@ for epoch in range(EPOCHS):
         break
 
 
-# ==================================================
 # 7. SAVE TRAINING HISTORY
-# ==================================================
-
 with HISTORY_PATH.open(
     "w", newline="", encoding="utf-8"
 ) as file:
