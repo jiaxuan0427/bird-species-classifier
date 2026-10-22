@@ -10,10 +10,8 @@ from torchvision import transforms
 from PIL import Image
 from tqdm import tqdm
 
-# ============================================================
-# 1. SETTINGS
-# ============================================================
 
+# 1. SETTINGS
 SEED = 42
 NUM_CLASSES = 200
 BATCH_SIZE = 16
@@ -46,10 +44,7 @@ print(f"Batch size: {BATCH_SIZE}")
 print(f"Image size: {IMAGE_SIZE} x {IMAGE_SIZE}")
 
 
-# ============================================================
 # 2. READ ALL TRAINING ANNOTATIONS
-# ============================================================
-
 records = []
 
 with open(ANNOTATION_FILE, "r", encoding="utf-8") as file:
@@ -81,12 +76,8 @@ print(f"Training images: {len(records)}")
 print(f"Classes: {len(labels_found)}")
 
 
-# ============================================================
 # 3. IMAGE PREPROCESSING AND AUGMENTATION
-# ============================================================
-
-# Augmentation creates varied training examples to help
-# the model learn features that generalise to new images.
+# Augmentation creates varied training examples to help the model learn features that generalise to new images
 train_transform = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
     transforms.RandomHorizontalFlip(),
@@ -99,10 +90,7 @@ train_transform = transforms.Compose([
 ])
 
 
-# ============================================================
 # 4. DATASET
-# ============================================================
-
 class BirdDataset(Dataset):
     def __init__(self, records, image_dir, transform):
         self.records = records
@@ -136,10 +124,7 @@ train_loader = DataLoader(
 )
 
 
-# ============================================================
 # 5. CUSTOM CNN ARCHITECTURE
-# ============================================================
-
 class CustomCNN(nn.Module):
     def __init__(self, num_classes=200):
         super().__init__()
@@ -183,10 +168,7 @@ class CustomCNN(nn.Module):
         return self.classifier(x)
 
 
-# ============================================================
 # 6. INITIALISE MODEL AND OPTIMISER
-# ============================================================
-
 model = CustomCNN(num_classes=NUM_CLASSES).to(device)
 
 criterion = nn.CrossEntropyLoss()
@@ -201,10 +183,7 @@ print("\nModel architecture:")
 print(model)
 
 
-# ============================================================
 # 7. TRAIN ON THE FULL TRAINING DATASET
-# ============================================================
-
 history = []
 
 for epoch in range(EPOCHS):
@@ -290,10 +269,7 @@ for epoch in range(EPOCHS):
         writer.writerows(history)
 
 
-# ============================================================
 # 8. FINISHED
-# ============================================================
-
 print("\n" + "=" * 60)
 print("FULL CUSTOM CNN TRAINING COMPLETED")
 print("=" * 60)
