@@ -13,10 +13,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 
-# ==================================================
 # 1. CONFIGURATION
-# ==================================================
-
 SEED = 42
 NUM_CLASSES = 200
 VALIDATION_RATIO = 0.20
@@ -51,10 +48,7 @@ print("=" * 55)
 print("Device:", device)
 
 
-# ==================================================
 # 2. READ ANNOTATIONS AND CREATE SPLIT
-# ==================================================
-
 records = []
 
 with ANNOTATION_FILE.open("r", encoding="utf-8") as file:
@@ -82,10 +76,7 @@ print("Validation images:", len(val_records))
 print("Number of species:", len(species_by_label))
 
 
-# ==================================================
 # 3. IMAGE PREPROCESSING
-# ==================================================
-
 train_transform = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
     transforms.RandomHorizontalFlip(p=0.5),
@@ -107,10 +98,7 @@ val_transform = transforms.Compose([
 ])
 
 
-# ==================================================
 # 4. DATASET AND DATALOADERS
-# ==================================================
-
 class BirdDataset(Dataset):
     def __init__(self, records, transform):
         self.records = records
@@ -145,10 +133,7 @@ val_loader = DataLoader(
 )
 
 
-# ==================================================
 # 5. LOAD PRETRAINED EFFICIENTNET-B0
-# ==================================================
-
 # Load EfficientNet-B0 with ImageNet pretrained weights.
 weights = EfficientNet_B0_Weights.DEFAULT
 model = efficientnet_b0(weights=weights)
@@ -188,10 +173,7 @@ print("Loaded pretrained EfficientNet-B0.")
 print("Unfrozen layers: final feature block and classifier")
 
 
-# ==================================================
 # 6. TRAIN AND VALIDATE
-# ==================================================
-
 best_val_accuracy = -1.0
 epochs_without_improvement = 0
 history = []
@@ -308,10 +290,7 @@ for epoch in range(EPOCHS):
         break
 
 
-# ==================================================
 # 7. SAVE TRAINING HISTORY
-# ==================================================
-
 with HISTORY_PATH.open(
     "w", newline="", encoding="utf-8"
 ) as file:
