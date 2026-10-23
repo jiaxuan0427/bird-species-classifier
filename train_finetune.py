@@ -188,6 +188,7 @@ print("Loaded baseline checkpoint.")
 print("Unfrozen layers: layer4 and fc")
 
 
+
 # 6. TRAIN AND VALIDATE
 best_val_accuracy = -1.0
 epochs_without_improvement = 0
