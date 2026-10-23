@@ -7,10 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-# --------------------------------------------------
-# 1. OFFICIAL TEST-SET RESULTS
-# --------------------------------------------------
 
+# 1. OFFICIAL TEST-SET RESULTS
 results = [
     [
         "Custom CNN", "15", "121/1204",
@@ -62,10 +60,8 @@ print("=" * 130)
 
 print(tabulate(results, headers=headers, tablefmt="grid"))
 
-# --------------------------------------------------
-# 2. BEST OVERALL MODEL
-# --------------------------------------------------
 
+# 2. BEST OVERALL MODEL
 print("\nBEST OVERALL MODEL: EfficientNet-B0")
 print("Top-1 Accuracy: 67.69%")
 print("Top-5 Accuracy: 90.61%")
@@ -73,10 +69,8 @@ print("Average Class Accuracy: 66.52%")
 print("Macro F1-score: 65.82%")
 print("=" * 130)
 
-# --------------------------------------------------
-# 3. PREPARE DATA FOR THE COMBINED CHART
-# --------------------------------------------------
 
+# 3. PREPARE DATA FOR THE COMBINED CHART
 models = [
     "Custom CNN",
     "Frozen ResNet18",
@@ -93,10 +87,8 @@ class_accuracies = [9.58, 40.58, 47.20, 47.14, 47.44, 66.52]
 # Create the outputs folder if it does not exist
 os.makedirs("outputs", exist_ok=True)
 
-# --------------------------------------------------
-# 4. CREATE ONE COMBINED BAR CHART
-# --------------------------------------------------
 
+# 4. CREATE ONE COMBINED BAR CHART
 x = np.arange(len(models))
 width = 0.38
 
@@ -151,10 +143,8 @@ ax.bar_label(
 
 fig.tight_layout()
 
-# --------------------------------------------------
-# 5. SAVE AND DISPLAY THE CHART
-# --------------------------------------------------
 
+# 5. SAVE AND DISPLAY THE CHART
 output_path = "outputs/model_accuracy_comparison.png"
 
 plt.savefig(

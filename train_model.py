@@ -1,4 +1,3 @@
-
 """
 Bird Species Classification
 Model: ResNet18 with transfer learning
@@ -28,10 +27,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 
-# ==================================================
 # 1. CONFIGURATION
-# ==================================================
-
 SEED = 42
 VALIDATION_RATIO = 0.20
 
@@ -65,10 +61,7 @@ print("Device:", device)
 print("Number of classes:", NUM_CLASSES)
 
 
-# ==================================================
 # 2. READ ANNOTATIONS
-# ==================================================
-
 records = []
 
 with ANNOTATION_FILE.open("r", encoding="utf-8") as file:
@@ -97,10 +90,7 @@ if len(species_by_label) != NUM_CLASSES:
 print("Species identified:", len(species_by_label))
 
 
-# ==================================================
 # 3. TRAIN / VALIDATION SPLIT
-# ==================================================
-
 labels = [label for _, label in records]
 
 train_records, val_records = train_test_split(
@@ -114,12 +104,8 @@ print("Training images:", len(train_records))
 print("Validation images:", len(val_records))
 
 
-# ==================================================
 # 4. IMAGE TRANSFORMS
-# ==================================================
-
-# Normalize images using ImageNet statistics because
-# the pretrained ResNet18 weights were trained on ImageNet.
+# Normalize images using ImageNet statistics because the pretrained ResNet18 weights were trained on ImageNet.
 image_transform = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
     transforms.ToTensor(),
@@ -130,10 +116,7 @@ image_transform = transforms.Compose([
 ])
 
 
-# ==================================================
 # 5. CUSTOM DATASET
-# ==================================================
-
 class BirdDataset(Dataset):
     """Load bird images and their numeric labels."""
 
@@ -172,10 +155,7 @@ val_loader = DataLoader(
 )
 
 
-# ==================================================
 # 6. LOAD PRETRAINED RESNET18
-# ==================================================
-
 print("\nLoading pretrained ResNet18...")
 
 weights = ResNet18_Weights.DEFAULT
@@ -205,10 +185,7 @@ optimizer = torch.optim.Adam(
 print("Model ready for training.")
 
 
-# ==================================================
 # 7. TRAINING AND VALIDATION
-# ==================================================
-
 best_val_accuracy = -1.0
 history = []
 
@@ -216,8 +193,7 @@ for epoch in range(EPOCHS):
 
     epoch_start = time.time()
 
-    # The feature extractor is frozen, so keep the
-    # entire model in evaluation mode during training.
+    # The feature extractor is frozen, so keep the entire model in evaluation mode during training.
     # Gradients are still calculated for model.fc.
     model.eval()
 
@@ -333,10 +309,7 @@ for epoch in range(EPOCHS):
         print("Best checkpoint saved:", CHECKPOINT_PATH)
 
 
-# ==================================================
 # 8. SAVE TRAINING HISTORY
-# ==================================================
-
 import csv
 
 history_path = OUTPUT_DIR / "training_history.csv"

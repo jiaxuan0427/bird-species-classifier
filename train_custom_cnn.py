@@ -12,9 +12,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 
-# ==================================================
 # 1. CONFIGURATION
-# ==================================================
 SEED = 42
 NUM_CLASSES = 200
 VALIDATION_RATIO = 0.20
@@ -44,9 +42,7 @@ print("=" * 55)
 print("Device:", device)
 
 
-# ==================================================
 # 2. READ ANNOTATIONS
-# ==================================================
 records = []
 
 with ANNOTATION_FILE.open("r", encoding="utf-8") as file:
@@ -72,9 +68,7 @@ print("Validation images:", len(val_records))
 print("Classes:", len(species_by_label))
 
 
-# ==================================================
 # 3. IMAGE TRANSFORMS
-# ==================================================
 # Data augmentation is applied only to training images.
 train_transform = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
@@ -97,9 +91,7 @@ val_transform = transforms.Compose([
 ])
 
 
-# ==================================================
 # 4. DATASET
-# ==================================================
 class BirdDataset(Dataset):
     def __init__(self, items, transform):
         self.items = items
@@ -133,9 +125,7 @@ val_loader = DataLoader(
 )
 
 
-# ==================================================
 # 5. DEFINE CUSTOM CNN ARCHITECTURE
-# ==================================================
 class CustomCNN(nn.Module):
     """
     CNN trained from scratch.
@@ -203,9 +193,7 @@ print("\nCustom CNN architecture:")
 print(model)
 
 
-# ==================================================
 # 6. TRAIN AND VALIDATE
-# ==================================================
 best_val_accuracy = -1.0
 history = []
 
@@ -304,9 +292,7 @@ for epoch in range(EPOCHS):
         print("Saved best custom CNN checkpoint.")
 
 
-# ==================================================
 # 7. SAVE TRAINING HISTORY
-# ==================================================
 with HISTORY_PATH.open(
     "w", newline="", encoding="utf-8"
 ) as file:

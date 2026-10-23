@@ -11,10 +11,8 @@ from PIL import Image
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-# ============================================================
-# 1. SETTINGS
-# ============================================================
 
+# 1. SETTINGS
 SEED = 42
 NUM_CLASSES = 200
 VALIDATION_RATIO = 0.20
@@ -39,10 +37,7 @@ torch.manual_seed(SEED)
 device = torch.device("cpu")
 
 
-# ============================================================
 # 2. READ ANNOTATIONS AND CREATE STRATIFIED SPLIT
-# ============================================================
-
 records = []
 
 with open(ANNOTATION_FILE, "r", encoding="utf-8") as file:
@@ -73,10 +68,7 @@ print(f"Validation images: {len(val_records)}")
 print(f"Classes: {NUM_CLASSES}")
 
 
-# ============================================================
 # 3. TRANSFORMS
-# ============================================================
-
 train_transform = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
     transforms.RandomHorizontalFlip(),
@@ -98,10 +90,7 @@ val_transform = transforms.Compose([
 ])
 
 
-# ============================================================
 # 4. DATASET AND DATALOADERS
-# ============================================================
-
 class BirdDataset(Dataset):
     def __init__(self, records, image_dir, transform):
         self.records = records
@@ -140,10 +129,7 @@ val_loader = DataLoader(
 )
 
 
-# ============================================================
 # 5. CUSTOM CNN ARCHITECTURE
-# ============================================================
-
 class CustomCNN(nn.Module):
     def __init__(self, num_classes=200):
         super().__init__()
@@ -182,10 +168,7 @@ class CustomCNN(nn.Module):
         return self.classifier(self.features(x))
 
 
-# ============================================================
 # 6. MODEL, LOSS AND OPTIMISER
-# ============================================================
-
 model = CustomCNN(NUM_CLASSES).to(device)
 criterion = nn.CrossEntropyLoss()
 
@@ -199,10 +182,7 @@ history = []
 best_val_accuracy = -1.0
 
 
-# ============================================================
 # 7. TRAINING AND VALIDATION
-# ============================================================
-
 for epoch in range(EPOCHS):
     start_time = time.time()
 

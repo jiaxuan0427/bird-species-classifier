@@ -12,10 +12,7 @@ from sklearn.metrics import (
     confusion_matrix
 )
 
-# ============================================================
 # 1. SETTINGS
-# ============================================================
-
 DATA_DIR = Path("data")
 TEST_DIR = DATA_DIR / "Test"
 TEST_ANNOTATION = DATA_DIR / "test.txt"
@@ -31,11 +28,8 @@ NUM_CLASSES = 200
 device = torch.device("cpu")
 
 
-# ============================================================
 # 2. IMAGE PREPROCESSING
 # Must match the custom CNN training preprocessing
-# ============================================================
-
 test_transform = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
     transforms.ToTensor(),
@@ -46,10 +40,7 @@ test_transform = transforms.Compose([
 ])
 
 
-# ============================================================
 # 3. LOAD TEST ANNOTATIONS
-# ============================================================
-
 records = []
 
 with TEST_ANNOTATION.open("r", encoding="utf-8") as file:
@@ -64,10 +55,7 @@ print(f"Test images: {len(records)}")
 print(f"Number of classes: {NUM_CLASSES}")
 
 
-# ============================================================
 # 4. TEST DATASET
-# ============================================================
-
 class BirdTestDataset(Dataset):
     def __init__(self, records, image_dir, transform):
         self.records = records
@@ -102,11 +90,8 @@ test_loader = DataLoader(
 )
 
 
-# ============================================================
 # 5. CUSTOM CNN ARCHITECTURE
 # Must match the training architecture exactly
-# ============================================================
-
 class CustomCNN(nn.Module):
     def __init__(self, num_classes=200):
         super().__init__()
@@ -147,10 +132,7 @@ class CustomCNN(nn.Module):
         return x
 
 
-# ============================================================
 # 6. LOAD THE TRAINED MODEL
-# ============================================================
-
 if not CHECKPOINT_PATH.exists():
     raise FileNotFoundError(
         f"Checkpoint not found: {CHECKPOINT_PATH}"
@@ -170,10 +152,7 @@ model.eval()
 print(f"Loaded checkpoint: {CHECKPOINT_PATH}")
 
 
-# ============================================================
 # 7. COLLECT PREDICTIONS
-# ============================================================
-
 all_labels = []
 all_predictions = []
 all_top5_predictions = []
@@ -207,10 +186,7 @@ with torch.no_grad():
                 class_correct[label] += 1
 
 
-# ============================================================
 # 8. CALCULATE METRICS
-# ============================================================
-
 total_images = len(all_labels)
 
 correct_total = sum(
@@ -258,11 +234,8 @@ macro_recall *= 100
 macro_f1 *= 100
 
 
-# ============================================================
 # 9. SAVE CONFUSION MATRIX
 # Rows = true labels; columns = predicted labels
-# ============================================================
-
 confusion = confusion_matrix(
     all_labels,
     all_predictions,
@@ -281,11 +254,8 @@ with CONFUSION_MATRIX_PATH.open(
     for label, row in enumerate(confusion):
         writer.writerow([label] + row.tolist())
 
-
-# ============================================================
+ 
 # 10. DISPLAY RESULTS
-# ============================================================
-
 print("\n" + "=" * 55)
 print("CUSTOM CNN OFFICIAL TEST RESULTS")
 print("=" * 55)

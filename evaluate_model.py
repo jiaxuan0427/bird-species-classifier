@@ -15,9 +15,7 @@ from sklearn.metrics import (
 from PIL import Image
 
 
-# ------------------------------------------
 # 1. Paths and configuration
-# ------------------------------------------
 DATA_DIR = Path("data")
 TEST_DIR = DATA_DIR / "Test"
 TEST_FILE = DATA_DIR / "test.txt"
@@ -30,9 +28,7 @@ BATCH_SIZE = 8
 device = torch.device("cpu")
 
 
-# ------------------------------------------
 # 2. Load test annotations
-# ------------------------------------------
 test_records = []
 
 with TEST_FILE.open("r", encoding="utf-8") as file:
@@ -43,9 +39,7 @@ with TEST_FILE.open("r", encoding="utf-8") as file:
 print("Test images:", len(test_records))
 
 
-# ------------------------------------------
 # 3. Load the saved model
-# ------------------------------------------
 checkpoint = torch.load(
     CHECKPOINT_PATH,
     map_location=device,
@@ -63,9 +57,7 @@ model.to(device)
 model.eval()
 
 
-# ------------------------------------------
 # 4. Image preprocessing
-# ------------------------------------------
 image_transform = transforms.Compose([
     transforms.Resize((image_size, image_size)),
     transforms.ToTensor(),
@@ -76,9 +68,7 @@ image_transform = transforms.Compose([
 ])
 
 
-# ------------------------------------------
 # 5. Test dataset
-# ------------------------------------------
 class BirdTestDataset(Dataset):
     def __init__(self, records):
         self.records = records
@@ -105,9 +95,7 @@ test_loader = DataLoader(
 )
 
 
-# ------------------------------------------
 # 6. Evaluate predictions
-# ------------------------------------------
 all_labels = []
 all_predictions = []
 all_top5_predictions = []
@@ -141,9 +129,7 @@ with torch.no_grad():
                 class_correct[true_label] += 1
 
 
-# ------------------------------------------
 # 7. Calculate evaluation metrics
-# ------------------------------------------
 total = len(all_labels)
 
 correct = sum(
@@ -185,10 +171,8 @@ macro_precision, macro_recall, macro_f1, _ = (
 )
 
 
-# ------------------------------------------
 # 8. Save confusion matrix
 # Rows = true classes; columns = predicted classes
-# ------------------------------------------
 confusion = confusion_matrix(
     all_labels,
     all_predictions,
@@ -208,9 +192,7 @@ with CONFUSION_MATRIX_PATH.open(
         writer.writerow([label] + row.tolist())
 
 
-# ------------------------------------------
 # 9. Display overall results
-# ------------------------------------------
 print("\n" + "=" * 55)
 print("RESNET18 — AUGMENTED FINE-TUNING TEST RESULTS")
 print("=" * 55)
@@ -225,9 +207,7 @@ print(f"Classes represented: {len(class_accuracies)}/{num_classes}")
 print(f"Confusion matrix saved to: {CONFUSION_MATRIX_PATH}")
 
 
-# ------------------------------------------
 # 10. Show first 10 class-level results
-# ------------------------------------------
 print("\nFirst 10 class-level results:")
 
 for label in sorted(class_total)[:10]:
