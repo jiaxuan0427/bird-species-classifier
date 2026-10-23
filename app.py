@@ -363,10 +363,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ============================================================
 # 6. MODEL PERFORMANCE OVERVIEW
-# ============================================================
-
 st.markdown('<div class="section-heading">Explore bird species</div>',
             unsafe_allow_html=True)
 
@@ -555,10 +552,7 @@ with result_col:
         """, unsafe_allow_html=True)
 
 
-# ============================================================
 # 8. ABOUT THE MODEL
-# ============================================================
-
 st.divider()
 
 st.markdown(
