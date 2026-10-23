@@ -172,8 +172,7 @@ model = model.to(device)
 
 criterion = nn.CrossEntropyLoss()
 
-# Use separate learning rates for the pretrained features
-# and the newly trained classification layer.
+# Use separate learning rates for the pretrained features and the newly trained classification layer
 optimizer = torch.optim.Adam([
     {
         "params": model.layer4.parameters(),
